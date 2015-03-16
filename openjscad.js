@@ -1266,6 +1266,7 @@ OpenJsCad.Processor.prototype = {
     this.clearViewer();
     this.processing = true;
     this.statusspan.innerHTML = "Rendering code, please wait <img id=busy src='imgs/busy.gif'>";
+    this.renderStartTime = Date.now();
     this.enableItems();
     var that = this;
     var paramValues = this.getParamValues();
@@ -1288,6 +1289,7 @@ OpenJsCad.Processor.prototype = {
           else
           {
             that.setCurrentObject(obj);
+            console.log("Render completed in %d seconds", (Date.now()-that.renderStartTime)/1000);
             that.statusspan.innerHTML = "Ready.";
           }
           that.enableItems();
@@ -1308,6 +1310,7 @@ OpenJsCad.Processor.prototype = {
         this.statusspan.innerHTML = "Rendering code, please wait <img id=busy src='imgs/busy.gif'>";
         var obj = OpenJsCad.parseJsCadScriptSync(this.script, paramValues, this.debugging);
         that.setCurrentObject(obj);
+        console.log("Render completed in %d seconds", (Date.now()-that.renderStartTime)/1000);
         that.processing = false;
         that.statusspan.innerHTML = "Ready.";
       }
