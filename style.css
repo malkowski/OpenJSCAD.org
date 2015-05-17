@@ -117,8 +117,8 @@ canvas {
 #tail { 
    z-index: 4;
    position: absolute;
-   bottom: 1em; 
-   margin: 1em;
+   bottom: 0; 
+   margin: 0.5em;
 }
 
 #busy {
