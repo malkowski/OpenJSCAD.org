@@ -387,24 +387,39 @@ OpenJsCad.Viewer.prototype = {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       gl.begin(gl.LINES);
-      var plate = 200;
+      var plate = [ 280, 160 ];
       if(this.plate) {
          gl.color(.8,.8,.8,.5); // -- minor grid
-         for(var x=-plate/2; x<=plate/2; x++) {
-            if(x%10) {
-               gl.vertex(-plate/2, x, 0);
-               gl.vertex(plate/2, x, 0);
-               gl.vertex(x, -plate/2, 0);
-               gl.vertex(x, plate/2, 0);
+         for(var x=-plate/2; x<=plate[0]/2; x++) {
+            if (x%10) {
+               gl.vertex(x, -plate[1]/2, 0);
+               gl.vertex(x, plate[1]/2, 0);
+            }
+         }
+         for(var y=-plate[1]/2; y<=plate[1]/2; y++) {
+            if(y%10) {
+               gl.vertex(-plate[0]/2, y, 0);
+               gl.vertex(plate[0]/2, y, 0);
             }
          }
          gl.color(.5,.5,.5,.5); // -- major grid
-         for(var x=-plate/2; x<=plate/2; x+=10) {
-            gl.vertex(-plate/2, x, 0);
-            gl.vertex(plate/2, x, 0);
-            gl.vertex(x, -plate/2, 0);
-            gl.vertex(x, plate/2, 0);
+         for(var x=-plate[0]/2; x<=plate[0]/2; x+=10) {
+            if(x!=0) {
+               gl.vertex(x, -plate[1]/2, 0);
+               gl.vertex(x, plate[1]/2, 0);
+            }
          }
+         for(var y=-plate[1]/2; y<=plate[1]/2; y+=10) {
+            if(y!=0) {
+               gl.vertex(-plate[0]/2, y, 0);
+               gl.vertex(plate[0]/2, y, 0);
+            }
+         }
+         gl.color(0,.4,1,.75); // -- center lines
+         gl.vertex(-plate[0]/2, 0, 0);
+         gl.vertex(plate[0]/2, 0, 0);
+         gl.vertex(0, -plate[1]/2, 0);
+         gl.vertex(0, plate[1]/2, 0);
       }
       if(0) {
          //X - red
@@ -435,15 +450,15 @@ OpenJsCad.Viewer.prototype = {
       if(0) {
          gl.triangle();
          gl.color(0.6, 0.2, 0.6, 0.2); //positive direction
-         gl.vertex(-plate,-plate,0);
-         gl.vertex(plate,-plate,0);
-         gl.vertex(plate,plate,0);
+         gl.vertex(-plate[0],-plate[1],0);
+         gl.vertex(plate[0],-plate[1],0);
+         gl.vertex(plate[0],plate[1],0);
          gl.end();
          gl.triangle();
          gl.color(0.6, 0.2, 0.6, 0.2); //positive direction
-         gl.vertex(plate,plate,0);
-         gl.vertex(-plate,plate,0);
-         gl.vertex(-plate,-plate,0);
+         gl.vertex(plate[0],plate[1],0);
+         gl.vertex(-plate[0],plate[1],0);
+         gl.vertex(-plate[0],-plate[1],0);
          gl.end();
       }
       gl.end();
