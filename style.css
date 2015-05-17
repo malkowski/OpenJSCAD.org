@@ -43,7 +43,8 @@ a:visited {
    /* height: 100%;    note: newer ace expects height */
    right: 0px;
    z-index: 6;
-   background: rgba(255,255,255,0.15);
+   background: rgba(255,255,255,0.5);
+   border-left: 2px solid #999;
 }
 
 #viewerContext {

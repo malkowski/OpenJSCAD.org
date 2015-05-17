@@ -64,6 +64,11 @@ var version = '0.023 (2015/02/14)';
 //$(function() { $("#parametersdiv").draggable(); }); // doesn't work well, disabled
 var me = document.location.toString().match(/^file:/)?'web-offline':'web-online'; // me: {cli, web-offline, web-online}
 var browser = 'unknown';
+var config = {
+  startup: {
+    menuAutoHideTimeout: 0, // set to 3000 for classic behavior
+  }
+};
 if(navigator.userAgent.match(/(opera|chrome|safari|firefox|msie)/i))
    browser = RegExp.$1.toLowerCase();
 
@@ -74,7 +79,8 @@ $(document).ready(function() {
       $("#menu").height($(window).height());
       $("#menuHandle").css({top: '45%'});
    });
-   setTimeout( function(){$('#menu').css('left','-280px');},3000); // -- hide slide-menu after 3secs
+   // hide slide-menu after user-defined interval
+   setTimeout( function(){$('#menu').css('left','-280px');},config.startup.menuAutoHideTimeout);
 
    $('#menu').mouseleave(function() {
       $('#examples').css('height',0); $('#examples').hide(); 
