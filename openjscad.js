@@ -28,11 +28,11 @@ OpenJsCad.log = function(txt) {
 OpenJsCad.Viewer = function(containerelement, initialdepth) {
   var gl = GL.create();
   this.gl = gl;
-  this.angleX = -60;
+  this.angleX = -65;
   this.angleY = 0;
-  this.angleZ = -45;
+  this.angleZ = 2;
   this.viewpointX = 0;
-  this.viewpointY = -5;
+  this.viewpointY = 5;
   this.viewpointZ = initialdepth;
 
   this.touch = {
@@ -924,7 +924,7 @@ OpenJsCad.Processor = function(containerdiv, onchange) {
   this.zoomControl = null;
   //this.viewerwidth = 1200;
   //this.viewerheight = 800;
-  this.initialViewerDistance = 100;
+  this.initialViewerDistance = 250;
   this.processing = false;
   this.currentObject = null;
   this.hasValidCurrentObject = false;
@@ -983,7 +983,7 @@ OpenJsCad.Processor.prototype = {
 */    
     var viewerdiv = document.createElement("div");
     viewerdiv.className = "viewer";
-    viewerdiv.style.width = '100%';
+    viewerdiv.style.width = '60%';
     viewerdiv.style.height = '100%';
     this.containerdiv.appendChild(viewerdiv);
     this.viewerdiv = viewerdiv;
