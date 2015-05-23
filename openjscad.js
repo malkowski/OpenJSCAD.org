@@ -389,8 +389,8 @@ OpenJsCad.Viewer.prototype = {
       gl.begin(gl.LINES);
       var plate = [ 280, 160 ];
       if(this.plate) {
-         gl.color(.8,.8,.8,.5); // -- minor grid
-         for(var x=-plate/2; x<=plate[0]/2; x++) {
+         gl.color(.3,.7,.9,.3); // -- minor grid
+         for(var x=-plate[0]/2; x<=plate[0]/2; x++) {
             if (x%10) {
                gl.vertex(x, -plate[1]/2, 0);
                gl.vertex(x, plate[1]/2, 0);
@@ -402,7 +402,7 @@ OpenJsCad.Viewer.prototype = {
                gl.vertex(plate[0]/2, y, 0);
             }
          }
-         gl.color(.5,.5,.5,.5); // -- major grid
+         gl.color(0,.6,.9,.5); // -- major grid
          for(var x=-plate[0]/2; x<=plate[0]/2; x+=10) {
             if(x!=0) {
                gl.vertex(x, -plate[1]/2, 0);
