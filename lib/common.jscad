@@ -28,7 +28,19 @@ t.rccube = function (size,r,fn) {
 
     if (! fn) fn = t.fn;
 
-    return t.sccube({ r: r, fn: fn, size: size, z: [0,0] });
+/*
+    return CSG.roundedCube({
+        center: [ 0, 0, size[2]/2 ],
+        radius: [ size[0]/2, size[1]/2, size[2]/2+r ],
+        roundradius: r,
+        resolution: fn,
+    }).subtract([
+        CSG.cube({ center: [0,0,size[2]+r ], radius: [ size[0], size[1], r ] }),
+        CSG.cube({ center: [0,0,-r], radius: [ size[0], size[1], r ] })
+    ]);
+*/
+
+//    return t.sccube({ r: r, fn: fn, size: size, z: [0,0] });
 
     if (r > Math.min(size[0], size[1])/2) {
         r = Math.min(size[0], size[1])/2;
