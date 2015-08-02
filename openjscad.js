@@ -1050,6 +1050,7 @@ OpenJsCad.Processor.prototype = {
     };
     this.statusbuttons.appendChild(this.formatDropdown);
     this.generateOutputFileButton = document.createElement("button");
+    this.generateOutputFileButton.id = "generateOutputFile";
     this.generateOutputFileButton.onclick = function(e) {
       that.generateOutputFile();
     };
@@ -1137,7 +1138,7 @@ OpenJsCad.Processor.prototype = {
     var ext = this.selectedFormatInfo().extension;
     this.generateOutputFileButton.innerHTML = "Generate "+ext.toUpperCase();
   },
-  
+   
   clearViewer: function() {
     this.clearOutputFile();
     if (this.currentObject) {
@@ -1300,6 +1301,7 @@ OpenJsCad.Processor.prototype = {
             that.setCurrentObject(obj);
             that.statusspan.innerHTML = "Ready.";
             that.state = 2; // complete
+            that.generateOutputFile();
           }
           that.enableItems();
           if(that.onchange) that.onchange();
@@ -1499,6 +1501,7 @@ OpenJsCad.Processor.prototype = {
                     var blob = that.currentObjectToBlob();
                     console.log(blob,blob.length);                
                     fileWriter.write(blob);
+
                   }, 
                   function(fileerror){OpenJsCad.FileSystemApiErrorHandler(fileerror, "createWriter");} 
                 );
