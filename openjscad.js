@@ -28,11 +28,11 @@ OpenJsCad.log = function(txt) {
 OpenJsCad.Viewer = function(containerelement, initialdepth) {
   var gl = GL.create();
   this.gl = gl;
-  this.angleX = -60;
+  this.angleX = -65;
   this.angleY = 0;
-  this.angleZ = -45;
+  this.angleZ = 2;
   this.viewpointX = 0;
-  this.viewpointY = -5;
+  this.viewpointY = 5;
   this.viewpointZ = initialdepth;
 
   this.touch = {
@@ -392,64 +392,40 @@ OpenJsCad.Viewer.prototype = {
       gl.enable(gl.BLEND);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
       gl.begin(gl.LINES);
-      var plate = 200;
+      var plate = [ 280, 160 ];
       if(this.plate) {
-         gl.color(.8,.8,.8,.5); // -- minor grid
-         for(var x=-plate/2; x<=plate/2; x++) {
-            if(x%10) {
-               gl.vertex(-plate/2, x, 0);
-               gl.vertex(plate/2, x, 0);
-               gl.vertex(x, -plate/2, 0);
-               gl.vertex(x, plate/2, 0);
+         gl.color(.3,.7,.9,.3); // -- minor grid
+         for(var x=-plate[0]/2; x<=plate[0]/2; x++) {
+            if (x%10) {
+               gl.vertex(x, -plate[1]/2, 0);
+               gl.vertex(x, plate[1]/2, 0);
             }
          }
-         gl.color(.5,.5,.5,.5); // -- major grid
-         for(var x=-plate/2; x<=plate/2; x+=10) {
-            gl.vertex(-plate/2, x, 0);
-            gl.vertex(plate/2, x, 0);
-            gl.vertex(x, -plate/2, 0);
-            gl.vertex(x, plate/2, 0);
+         for(var y=-plate[1]/2; y<=plate[1]/2; y++) {
+            if(y%10) {
+               gl.vertex(-plate[0]/2, y, 0);
+               gl.vertex(plate[0]/2, y, 0);
+             }
          }
-      }
-      if(0) {
-         //X - red
-         gl.color(1, 0.5, 0.5, 0.2); //negative direction is lighter
-         gl.vertex(-100, 0, 0);
-         gl.vertex(0, 0, 0);
-   
-         gl.color(1, 0, 0, 0.8); //positive direction
-         gl.vertex(0, 0, 0);
-         gl.vertex(100, 0, 0);
-         //Y - green
-         gl.color(0.5, 1, 0.5, 0.2); //negative direction is lighter
-         gl.vertex(0, -100, 0);
-         gl.vertex(0, 0, 0);
-   
-         gl.color(0, 1, 0, 0.8); //positive direction
-         gl.vertex(0, 0, 0);
-         gl.vertex(0, 100, 0);
-         //Z - black
-         gl.color(0.5, 0.5, 0.5, 0.2); //negative direction is lighter
-         gl.vertex(0, 0, -100);
-         gl.vertex(0, 0, 0);
-   
-         gl.color(0.2, 0.2, 0.2, 0.8); //positive direction
-         gl.vertex(0, 0, 0);
-         gl.vertex(0, 0, 100);
-      }
-      if(0) {
-         gl.triangle();
-         gl.color(0.6, 0.2, 0.6, 0.2); //positive direction
-         gl.vertex(-plate,-plate,0);
-         gl.vertex(plate,-plate,0);
-         gl.vertex(plate,plate,0);
-         gl.end();
-         gl.triangle();
-         gl.color(0.6, 0.2, 0.6, 0.2); //positive direction
-         gl.vertex(plate,plate,0);
-         gl.vertex(-plate,plate,0);
-         gl.vertex(-plate,-plate,0);
-         gl.end();
+
+         gl.color(0,.6,.9,.5); // -- major grid
+         for(var x=-plate[0]/2; x<=plate[0]/2; x+=10) {
+            if(x!=0) {
+               gl.vertex(x, -plate[1]/2, 0);
+               gl.vertex(x, plate[1]/2, 0);
+            }
+         }
+         for(var y=-plate[1]/2; y<=plate[1]/2; y+=10) {
+            if(y!=0) {
+               gl.vertex(-plate[0]/2, y, 0);
+               gl.vertex(plate[0]/2, y, 0);
+            }
+         }
+         gl.color(0,.4,1,.75); // -- center lines
+         gl.vertex(-plate[0]/2, 0, 0);
+         gl.vertex(plate[0]/2, 0, 0);
+         gl.vertex(0, -plate[1]/2, 0);
+         gl.vertex(0, plate[1]/2, 0);
       }
       gl.end();
       gl.disable(gl.BLEND);
@@ -873,7 +849,15 @@ OpenJsCad.FileSystemApiErrorHandler = function(fileError, operation) {
 OpenJsCad.AlertUserOfUncaughtExceptions = function() {
   window.onerror = function(message, url, line) {
     message = message.replace(/^Uncaught /i, "");
-    alert(message+"\n\n("+url+" line "+line+")");
+    if (window && window.alert) {
+      window.alert(message+"\n\n("+url+" line "+line+")");
+    }
+    else if (console && console.error) {
+      console.error("%s\n\n(%s line %s)", message, url, line);
+    }
+    else {
+      // some other fallbacy wak of alerting?
+    }
   };
 };
 
@@ -914,7 +898,7 @@ OpenJsCad.Processor = function(containerdiv, onchange) {
   this.zoomControl = null;
   //this.viewerwidth = 1200;
   //this.viewerheight = 800;
-  this.initialViewerDistance = 100;
+  this.initialViewerDistance = 250;
   this.currentObject = null;
   this.hasOutputFile = false;
   this.worker = null;
@@ -977,7 +961,7 @@ OpenJsCad.Processor.prototype = {
 */    
     var viewerdiv = document.createElement("div");
     viewerdiv.className = "viewer";
-    viewerdiv.style.width = '100%';
+    viewerdiv.style.width = '0';
     viewerdiv.style.height = '100%';
     this.containerdiv.appendChild(viewerdiv);
     this.viewerdiv = viewerdiv;
@@ -1456,6 +1440,19 @@ OpenJsCad.Processor.prototype = {
     return "Download "+ext.toUpperCase();
   },
 
+  updateParentDownloadLink: function() {
+    if (window.postMessage && window.parent) {
+      var message = {
+        "messageType": "updateDownloadLink", 
+        "messageData": { 
+          "url": this.downloadOutputFileLink.href
+        }
+      };
+      console.trace("window.postMessage: %O", message);
+      window.postMessage(message, "*");
+    }
+  },
+
   generateOutputFileBlobUrl: function() {
     var blob = this.currentObjectToBlob();
     var windowURL=OpenJsCad.getWindowURL();
@@ -1463,6 +1460,7 @@ OpenJsCad.Processor.prototype = {
     if(!this.outputFileBlobUrl) throw new Error("createObjectURL() failed"); 
     this.hasOutputFile = true;
     this.downloadOutputFileLink.href = this.outputFileBlobUrl;
+    this.updateParentDownloadLink();
     this.downloadOutputFileLink.innerHTML = this.downloadLinkTextForCurrentObject();
     var ext = this.selectedFormatInfo().extension;
     this.downloadOutputFileLink.setAttribute("download", "openjscad."+ext);
@@ -1493,6 +1491,7 @@ OpenJsCad.Processor.prototype = {
                       that.downloadOutputFileLink.innerHTML = that.downloadLinkTextForCurrentObject();
                       that.downloadOutputFileLink.setAttribute("download", fileEntry.name);
                       that.enableItems();
+                      that.updateParentDownloadLink();
                       if(that.onchange) that.onchange();
                     };
                     fileWriter.onerror = function(e) {
@@ -1501,7 +1500,6 @@ OpenJsCad.Processor.prototype = {
                     var blob = that.currentObjectToBlob();
                     console.log(blob,blob.length);                
                     fileWriter.write(blob);
-
                   }, 
                   function(fileerror){OpenJsCad.FileSystemApiErrorHandler(fileerror, "createWriter");} 
                 );
