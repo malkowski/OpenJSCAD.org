@@ -891,6 +891,7 @@ OpenJsCad.getParamDefinitions = function(script) {
 };
 
 OpenJsCad.Processor = function(containerdiv, onchange) {
+  var self = this;
   this.containerdiv = containerdiv;
   this.onchange = onchange;
   this.viewerdiv = null;
@@ -915,6 +916,25 @@ OpenJsCad.Processor = function(containerdiv, onchange) {
 // 2 - complete    - completed processing
 // 3 - incomplete  - incompleted due to errors in processing
   this.state = 0; // initialized
+
+  // this shouldn't really be here.
+  if (window && window.addEventListener) {
+    window.addEventListener("message", function (event) {
+      //console.debug("message event handler: event = %O", event);
+
+      if (! event.data) return;
+      try {
+        switch (event.data.messageType) {
+          case "setProjectSourceCode":
+            self.setJsCad(source,fn);
+            if (self.onreload) self.onreload();
+          break;
+        }
+      }
+      catch (e) {
+      }
+    });
+  }
 };
 
 OpenJsCad.Processor.convertToSolid = function(obj) {
@@ -1451,6 +1471,21 @@ OpenJsCad.Processor.prototype = {
       console.trace("window.postMessage: %O", message);
       window.postMessage(message, "*");
     }
+  },
+
+  sendCurrentSourceCode: function () {
+    this.setJsCad(source,fn);
+
+    if (window.postMessage && window.parent) {
+      var message = {
+        "messageType": "gotProjectSourceCode",
+        "messageData": {
+          "source": this.script
+        }
+      };
+      window.postMessage(message, "*");
+    }
+
   },
 
   generateOutputFileBlobUrl: function() {
