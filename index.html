@@ -467,6 +467,7 @@ function onload() {
    // -- http://ace.ajax.org/#nav=howto
    editor = ace.edit("editor");
    editor.setTheme("ace/theme/chrome");
+   editor.setPrintMarginColumn(false);
    //document.getElementById('ace_gutter').style.background = 'none';
    editor.getSession().setMode("ace/mode/javascript");
    editor.getSession().on('change', function(e) {
