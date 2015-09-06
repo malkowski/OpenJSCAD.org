@@ -2,7 +2,7 @@
  * Title: 
  */
 
-include("../lib/common.jscad");
+include("lib/common.jscad");
 
 function main() {
 
