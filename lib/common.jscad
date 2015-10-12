@@ -233,3 +233,49 @@ return polyhedron({
 
 };
 
+
+// given an array of points [ width, depth, Z plane ],
+// return unioned array of polycube objects
+// e.g. polycube but with any number of planes instead of only two
+t.polystack = function (layers) {
+
+// layer slices defining shape width/depth at that point along Z
+
+    var output = [];
+    for (var n=0; n < layers.length-1; n++) {
+        var p0 = layers[n],
+            p1 = layers[n+1];
+
+        output.push(t.polycube(p0, p1));
+    }
+
+    return union(output);
+};
+
+
+// same as polystack but with cylinders
+t.cylstack = function (layers) {
+    // for now, depth is ignored, width = diameter
+    // eventually, each circle representing a slice
+    // will be able to define both width and depth
+    
+    var output = [];
+    for (var n=0; n < layers.length-1; n++) {
+        var p0 = layers[n],
+            p1 = layers[n+1];
+
+        var c = cylinder({ 
+            d1: p0[0], 
+            d2: p1[0], 
+            h: Math.abs(p1[2]-p0[2]),
+            fn: t.fn
+        })
+        .translate([ 0, 0, p0[2] ]);
+        
+        output.push(c);
+    }
+
+    return union(output);
+};
+
+
