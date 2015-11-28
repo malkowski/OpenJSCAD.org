@@ -3,8 +3,8 @@ function t () {};
 t.fn=32;
 
 // convert PostScript points to mm
-t.ps2mm = function (pointValue) {
-    return pointValue * 2.83464567;
+t.point2mm = function (pointValue) {
+    return pointValue * 0.352778;
 };
 
 // extrude path
@@ -27,20 +27,6 @@ t.rccube = function (size,r,fn) {
     }
 
     if (! fn) fn = t.fn;
-
-/*
-    return CSG.roundedCube({
-        center: [ 0, 0, size[2]/2 ],
-        radius: [ size[0]/2, size[1]/2, size[2]/2+r ],
-        roundradius: r,
-        resolution: fn,
-    }).subtract([
-        CSG.cube({ center: [0,0,size[2]+r ], radius: [ size[0], size[1], r ] }),
-        CSG.cube({ center: [0,0,-r], radius: [ size[0], size[1], r ] })
-    ]);
-*/
-
-//    return t.sccube({ r: r, fn: fn, size: size, z: [0,0] });
 
     if (r > Math.min(size[0], size[1])/2) {
         r = Math.min(size[0], size[1])/2;
@@ -231,6 +217,48 @@ return polyhedron({
 	]
 });
 
+};
+
+// centered cube with rounded edges along one axis
+t.polyrc = function (size1,r1,size2,r2,fn) {
+
+    if (size.length === undefined) {
+        r = size.r;
+        fn = size.fn;
+        size = size.size;
+    }
+
+    if (! fn) fn = t.fn;
+
+    if (r > Math.min(size[0], size[1])/2) {
+        r = Math.min(size[0], size[1])/2;
+    }
+
+	var shapes = [];
+	if (size[0] > Math.max(r1,r2)*2) 
+		shapes.push(t.polycube([ size1[0]-r1*2, size1[1], size1[2] ], [ size2[0]-r2*2, size2[1], size2[2] ]));
+
+    if (size[1] > Math.max(r1,r2)*2)
+		shapes.push(t.polycube([ size1[0], size1[1]-r1*2, size1[2] ], [ size2[0], size2[1]-r2*2, size2[2] ]));
+
+	// TODO: work in progress. for the cylinders below, consider setting size to [1,1,1] and scaling, to allow different x/y radius. otherwise this won't work right, since for example the top could be wider than the bottom, meaning the top and bottom cylinders would be offset from each other. probably makes more sense to do proper polygon slices on each Z plane and combine the two into a 3D shape by connecting each side, similar to how cylinder code works in tinkercad's example libraries.
+    shapes.push(
+
+		cylinder({ r1:r1, r2:r2, h:Math.max(size1[2],size2[2])-Math.min(size1[2],size2[2]), fn: fn })
+		.translate([   size[0]/2-Math.max(r1,r2),    size[1]/2-Math.max(r1,r2),  0 ]),
+
+		cylinder({ r1:r1, r2:r2, h:size[2], fn: fn })
+		.translate([ -(size[0]/2-Math.max(r1,r2)),   size[1]/2-Math.max(r1,r2),  0 ]),
+
+		cylinder({ r1:r1, r2:r2, h:size[2], fn: fn })
+		.translate([   size[0]/2-Math.max(r1,r2),  -(size[1]/2-Math.max(r1,r2)), 0 ]),
+
+		cylinder({ r1:r1, r2:r2, h:size[2], fn: fn })
+		.translate([ -(size[0]/2-Math.max(r1,r2)), -(size[1]/2-Math.max(r1,r2)), 0 ])
+
+    );
+
+    return union(shapes);
 };
 
 
