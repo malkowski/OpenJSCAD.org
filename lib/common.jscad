@@ -12,6 +12,12 @@ t.extrude = function (points, height) {
     return linear_extrude({ height: height }, polygon(points));
 };
 
+// cylinder that inherits currently set fn value
+t.cylinder = function (params) {
+	params.fn = this.fn;
+	return cylinder(params);
+};
+
 // centered cube
 t.ccube = function (size) {
     return cube(size).translate([-size[0]/2,-size[1]/2,0])
@@ -128,6 +134,45 @@ t.mirror = function (shape, axes) {
 	}
 
 	return union(shapes);
+};
+
+/**
+ * Rounded polycube: in essence, two rounded rectangles at different Z planes centered along x/y.
+ * Different width/depth/r of each layer is possible.
+ *
+ * Example:
+ * t.roundedpolycube(
+ *    { w: 70.15, d: 55, z: 0,  r: 2 },
+ *    { w: 68.15, d: 53, z: 10, r: 1 }
+ * )
+ *     
+ * })
+ *
+ */
+t.roundedpolycube = function (l1, l2) {
+
+    var w = Math.min(l1.w, l2.w),
+        d = Math.min(l1.d, l2.d),
+        h = Math.max(l1.z, l2.z)-Math.min(l1.z,l2.z),
+        z = Math.min(l1.z, l2.z),
+        r = Math.min(l1.r, l2.r);
+
+    var corner = cylinder({
+        r1: l1.r,
+        r2: l2.r, 
+        h: h,
+    });
+
+    return union([
+        corner.translate([ -w/2, -d/2, 0 ]).translate([  r,  r, z ]),
+        corner.translate([  w/2, -d/2, 0 ]).translate([ -r,  r, z ]),
+        corner.translate([ -w/2,  d/2, 0 ]).translate([  r, -r, z ]),
+        corner.translate([  w/2,  d/2, 0 ]).translate([ -r, -r, z ]),
+        
+        t.polycube([ l1.w-l1.r*2, l1.d, l1.z ], [ l2.w-l2.r*2, l2.d, l2.z ]),
+        t.polycube([ l1.w, l1.d-l1.r*2, l1.z ], [ l2.w, l2.d-l2.r*2, l2.z ]),
+        
+    ]);
 };
 
 
@@ -261,49 +306,46 @@ t.polyrc = function (size1,r1,size2,r2,fn) {
     return union(shapes);
 };
 
-
-// given an array of points [ width, depth, Z plane ],
-// return unioned array of polycube objects
-// e.g. polycube but with any number of planes instead of only two
-t.polystack = function (layers) {
-
-// layer slices defining shape width/depth at that point along Z
-
-    var output = [];
+// given an array of two or more objects, each defining a slice along the shape's Z axis,
+// follow through each layer and pass p0/p1 as arguments to the specified handler callback.
+t._layerStacker = function (layers, handler) {
+	var output = [];
     for (var n=0; n < layers.length-1; n++) {
         var p0 = layers[n],
             p1 = layers[n+1];
 
-        output.push(t.polycube(p0, p1));
+        output.push(handler(p0,p1));
     }
 
     return union(output);
 };
 
+// given an array of points [ width, depth, Z plane ],
+// return unioned array of polycube objects
+// e.g. polycube but with any number of planes instead of only two
+t.polystack = function (layers) {
+	return t._layerStacker(layers, t.polycube);
+};
+
+// for examples, see polystack and roundedpolycube
+t.roundedpolystack = function (layers) {
+	return t._layerStacker(layers, t.roundedpolycube);
+};
 
 // same as polystack but with cylinders
 t.cylstack = function (layers) {
     // for now, depth is ignored, width = diameter
     // eventually, each circle representing a slice
     // will be able to define both width and depth
-    
-    var output = [];
-    for (var n=0; n < layers.length-1; n++) {
-        var p0 = layers[n],
-            p1 = layers[n+1];
 
-        var c = cylinder({ 
+	return t._layerStacker(layers, function(p0,p1){
+        return cylinder({ 
             d1: p0[0], 
             d2: p1[0], 
             h: Math.abs(p1[2]-p0[2]),
             fn: t.fn
         })
-        .translate([ 0, 0, p0[2] ]);
-        
-        output.push(c);
-    }
-
-    return union(output);
+        .translate([ 0, 0, p0[2] ])
+	});    
 };
-
 
