@@ -238,6 +238,36 @@ t.reflectCylinderAtCornersQuad = function (arguments) {
     ]);
 };
 
+/**
+ * Triangular Prism: specify width/depth/height, done.
+ * yeah yeah it's not a "triangle", whatever, this is quicker/easier to type repeatedly.
+ */
+t.triangle = function (dimensions) {
+
+var w = dimensions[0],
+    d = dimensions[1],
+    h = dimensions[2];
+
+var points = [
+	[    0, -d/2, 0 ], // bottom rear
+	[  w/2,  d/2, 0 ], // bottom front right
+	[ -w/2,  d/2, 0 ], // bottom front left
+	[    0, -d/2, h ], // top rear
+	[  w/2,  d/2, h ], // top front right
+	[ -w/2,  d/2, h ], // top front left
+];
+var polygons = [
+	[0,1,2],   // bottom
+	[0,2,5,3], // left
+	[2,1,4,5], // front
+	[0,3,4,1], // right
+	[3,5,4],   // top
+];
+
+return polyhedron({ points: points, polygons: polygons });
+
+};
+
 // example: draw a shape that's 20x20 at z=0 and 10x15 at z=5: p1=[20,20,0],p2=[10,15,5]
 t.polycube = function (p1, p2) {
 
