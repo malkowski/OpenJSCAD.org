@@ -395,7 +395,7 @@ t.screwthread = function (params) {
 		thickness:  1,
 		sideAngle:  0,
 		height:    10,
-		direction: -1, // 1 or -1
+		direction: -1, // 1 or -1. todo: instead of old ways of doing this, simply mirror the part to flip the thread direction.
 		twists:     1,
 		fn:      t.fn,
 	};
@@ -408,31 +408,39 @@ t.screwthread = function (params) {
 	var outerDiameter = params.outerD;
 	var radius = (outerDiameter / 2.0);
 	var circumference = 2 * Math.PI * radius;
-	var thickness = params.thickness;
+	var thickness = params.thickness; // outer wall height. angle adjusts height of inner wall, outer remains the same.
 	var twistCount = params.twists;
-	var twistHeight = params.height;
+	var twistHeight = params.height; // height of one full circle
 	var pitchAngle = Math.atan(twistHeight / circumference / 2);
 	var divisions = params.fn;
 	var direction = params.direction;
 
-	var sideAngle = params.sideAngle;
+	var sideAngle = params.sideAngle; // determines height of rear wall
 	if (sideAngle < -45) sideAngle = -45;
 	if (sideAngle > 89) sideAngle = 89;
 
+	var threadDepth = radius - (innerDiameter/2);
+
+	// define width/height of Z/Y point positions, using avg. between both inner and outer wall heights.
+	// in other words, zprime*yprime = ((zprime+angleOffsetHeight)+(zprime-angleOffsetHeight))/2*yprime
 	var zprime = (thickness / 2.0) * Math.cos(pitchAngle);
 	var yprime = (thickness / 2.0) * Math.sin(pitchAngle);
-
-	var threadDepth = radius - (innerDiameter/2);
 
 	// Calculate difference in height between inner and outer wall, to set angle of screw thread
 	var angleOffsetHeight = Math.tan(sideAngle/180 * Math.PI) * threadDepth / 2;
 	if (sideAngle === 0) angleOffsetHeight = 0;
 
-	var a = [radius, yprime, zprime];
-	var b = [innerDiameter / 2.0, -yprime, zprime + angleOffsetHeight];
-	var c = [innerDiameter / 2.0, yprime, -zprime - angleOffsetHeight];
-	var d = [radius, -yprime, -zprime];
-	
+	var a = [radius, yprime, zprime]; // outside top
+	var b = [innerDiameter / 2.0, -yprime, zprime + angleOffsetHeight]; // inside top
+	var c = [innerDiameter / 2.0, yprime, -zprime - angleOffsetHeight]; // inside bottom
+	var d = [radius, -yprime, -zprime]; // outside bottom
+
+	// console.log(a, b, c, d);
+	// a = [35.25,  0.01834,  1.25] // outside top
+	// b = [33.75, -0.01834,  1.88] // inside  top
+	// c = [33.75,  0.01834, -1.88] // inside  bottom
+	// d = [35.25, -0.01834, -1.25] // outside bottom
+
 	var e = a, f = b, g = c, h = d;
 	var i, j, k, l;
 
@@ -442,17 +450,23 @@ t.screwthread = function (params) {
 
 	/*
 	Cap off the end at the bottom starting point (points assume you're viewing the end flat-on)
-	a = top left
-	b = top right
-	c = bottom right
-	d = bottom left
+	a = top right
+	b = top left
+	c = bottom left
+	d = bottom right
 	*/
-	mesh.quad(a, b, c, d);
+	mesh.quad(a,b,c,d);
 
 	var increments = divisions * twistCount;
-	var angleDelta = (twistCount * Math.PI * 2) / increments * direction;
+	var angleDelta = (twistCount * Math.PI * 2) / increments;
 	var heightDelta = twistCount * twistHeight / increments;
 
+	// these are all the same sets of points, just rotated around each step to make all the surfaces
+	// [ top right,     top left,   bottom left, bottom right   ]
+	// [ outside top, inside top, inside bottom, outside bottom ]
+	// [ a, b, c, d ]
+	// [ e, f, g, h ]
+	// [ i, j, k, l ]
 	for (var iDiv = 0; iDiv < increments; iDiv++) {
 		
 		i = e.slice(0);
@@ -477,10 +491,10 @@ t.screwthread = function (params) {
 		i = front top left point
 		j = rear  top left point
 		*/
-		mesh.quad(e, f, j, i);
-		mesh.quad(f, g, k, j);
-		mesh.quad(g, h, l, k);
-		mesh.quad(h, e, i, l);
+		mesh.quad(e, f, j, i); // top
+		mesh.quad(f, g, k, j); // 
+		mesh.quad(g, h, l, k); // 
+		mesh.quad(h, e, i, l); // 
 
 		e = i;
 		f = j;
@@ -497,7 +511,13 @@ t.screwthread = function (params) {
 	*/
 	mesh.quad(e, f, g, h);
 
-	return mesh.polyhedron();
+	var out = mesh.polyhedron();
+	if (direction == -1) {
+		return out.mirroredX();
+	}
+	else {
+		return out;
+	}
 };
 
 /**
