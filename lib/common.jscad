@@ -430,6 +430,10 @@ t.screwthread = function (params) {
 	var angleOffsetHeight = Math.tan(sideAngle/180 * Math.PI) * threadDepth / 2;
 	if (sideAngle === 0) angleOffsetHeight = 0;
 
+	var increments = divisions * twistCount;
+	var angleDelta = (twistCount * Math.PI * 2) / increments;
+	var heightDelta = twistCount * twistHeight / increments;
+
 	var a = [radius, yprime, zprime]; // outside top
 	var b = [innerDiameter / 2.0, -yprime, zprime + angleOffsetHeight]; // inside top
 	var c = [innerDiameter / 2.0, yprime, -zprime - angleOffsetHeight]; // inside bottom
@@ -447,6 +451,19 @@ t.screwthread = function (params) {
 	var mesh = new Mesh3D();
 
 
+	var steps = [ [a,b,c,d] ];
+	for (var r = 1; r < increments; r++) {
+		var nextStep = steps[steps.length-1].map(function(p){ return p.slice(0) });
+		steps.push(nextStep);
+		for (var i = 0; i < nextStep.length; i++) {
+			var p = nextStep[i];
+			var angle = Math.atan2(p[0], p[1]) + angleDelta;
+			var ptRadius = Math.sqrt(p[0] * p[0] + p[1] * p[1]);
+			p[0] = ptRadius * Math.sin(angle);
+			p[1] = ptRadius * Math.cos(angle);
+			p[2] = p[2] + heightDelta;
+		}
+	}
 
 	/*
 	Cap off the end at the bottom starting point (points assume you're viewing the end flat-on)
@@ -457,59 +474,20 @@ t.screwthread = function (params) {
 	*/
 	mesh.quad(a,b,c,d);
 
-	var increments = divisions * twistCount;
-	var angleDelta = (twistCount * Math.PI * 2) / increments;
-	var heightDelta = twistCount * twistHeight / increments;
+	// build each of the walls
+	for (var i=1; i < steps.length; i++) {
+		// n = this ring's set of points, p = previous ring's set of points
+		var n = steps[i], p = steps[i-1];
 
-	// these are all the same sets of points, just rotated around each step to make all the surfaces
-	// [ top right,     top left,   bottom left, bottom right   ]
-	// [ outside top, inside top, inside bottom, outside bottom ]
-	// [ a, b, c, d ]
-	// [ e, f, g, h ]
-	// [ i, j, k, l ]
-	for (var iDiv = 0; iDiv < increments; iDiv++) {
-		
-		i = e.slice(0);
-		j = f.slice(0);
-		k = g.slice(0);
-		l = h.slice(0);
-		
-		var pts = [i, j, k, l];
-		for (var iPt = 0; iPt < pts.length; iPt++) {
-			var pt = pts[iPt];
-			var angle = Math.atan2(pt[0], pt[1]);
-			angle += angleDelta;
-			var ptRadius = Math.sqrt(pt[0] * pt[0] + pt[1] * pt[1]);
-			pt[0] = ptRadius * Math.sin(angle);
-			pt[1] = ptRadius * Math.cos(angle);
-			pt[2] = pt[2] + heightDelta;
-		}
-
-		/*
-		e = front top right point
-		f = rear  top right point
-		i = front top left point
-		j = rear  top left point
-		*/
-		mesh.quad(e, f, j, i); // top
-		mesh.quad(f, g, k, j); // 
-		mesh.quad(g, h, l, k); // 
-		mesh.quad(h, e, i, l); // 
-
-		e = i;
-		f = j;
-		g = k;
-		h = l;
+		mesh.quad( n[1], p[1], p[0], n[0] ); // top face
+		mesh.quad( p[1], n[1], n[2], p[2] ); // inside face
+		mesh.quad( n[3], p[3], p[2], n[2] ); // bottom face
+		mesh.quad( n[0], p[0], p[3], n[3] ); // outside face
 	}
 
-	/*
-	Cap off the top end (points assume you're viewing the end flat-on)
-	e = top right
-	f = top left
-	g = bottom left
-	h = bottom right
-	*/
-	mesh.quad(e, f, g, h);
+	// build the end cap (opposite direction as start cap: [b,a,d,c])
+	var s = steps[steps.length-1];
+	mesh.quad( s[1], s[0], s[3], s[2] );
 
 	var out = mesh.polyhedron();
 	if (direction == -1) {
