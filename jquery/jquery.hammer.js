@@ -1364,11 +1364,13 @@ Hammer.gestures.Transform = {
   }
 };
 
+/*
+ *
   // Based off Lo-Dash's excellent UMD wrapper (slightly modified) - https://github.com/bestiejs/lodash/blob/master/lodash.js#L5515-L5543
   // some AMD build optimizers, like r.js, check for specific condition patterns like the following:
   if(typeof define == 'function' && typeof define.amd == 'object' && define.amd) {
     // define as an anonymous module
-    define(function() {
+    define([], function() {
       return Hammer;
     });
     // check for `exports` after `define` in case a build optimizer adds an `exports` object
@@ -1379,6 +1381,11 @@ Hammer.gestures.Transform = {
   else {
     window.Hammer = Hammer;
   }
+*/
+
+// TODO: refactor necessary code to actually use this via require.js
+window.Hammer = Hammer;
+
 })(this);
 
 /*! jQuery plugin for Hammer.JS - v1.0.0 - 2014-01-02
