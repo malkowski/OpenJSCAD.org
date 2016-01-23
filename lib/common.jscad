@@ -379,15 +379,6 @@ t.cylstack = function (layers) {
 	});    
 };
 
-/**
-	{ "id": "twists", "displayName": "# Twists", "type": "float", "rangeMin": 0.25, "rangeMax": 100, "default": 1 },
-	{ "id": "direction", "displayName": "Direction", "type": "list", "listLabels": [ "Clockwise", "Counter-clockwise" ], "listValues": [ 1, -1 ], "default": 1 },
-	{ "id": "height", "displayName": "Twist Height", "type": "length", "rangeMin": 1, "rangeMax": 20, "default": 10 },
-	{ "id": "sideangle", "displayName": "Wall Angle", "type": "angle", "rangeMin": -45, "rangeMax": 89, "default": 0 },
-	{ "id": "thickness", "displayName": "Thickness", "type": "length", "rangeMin": 0.1, "rangeMax": 5, "default": 1 },
-	{ "id": "outerdiam", "displayName": "Outside Diameter", "type": "length", "rangeMin": 10, "rangeMax": 20, "default": 20 },
-	{ "id": "innerdiam", "displayName": "Inside Diameter", "type": "length", "rangeMin": 1, "rangeMax": 10, "default": 1 }
- */
 t.screwthread = function (params) {
 	var defaultParams = {
 		innerD:     1,
@@ -445,12 +436,6 @@ t.screwthread = function (params) {
 	// c = [33.75,  0.01834, -1.88] // inside  bottom
 	// d = [35.25, -0.01834, -1.25] // outside bottom
 
-	var e = a, f = b, g = c, h = d;
-	var i, j, k, l;
-
-	var mesh = new Mesh3D();
-
-
 	var steps = [ [a,b,c,d] ];
 	for (var r = 1; r < increments; r++) {
 		var nextStep = steps[steps.length-1].map(function(p){ return p.slice(0) });
@@ -464,6 +449,9 @@ t.screwthread = function (params) {
 			p[2] = p[2] + heightDelta;
 		}
 	}
+
+
+	var mesh = new Mesh3D;
 
 	/*
 	Cap off the end at the bottom starting point (points assume you're viewing the end flat-on)
