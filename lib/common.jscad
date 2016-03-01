@@ -14,12 +14,14 @@ t.extrude = function (points, height) {
 
 // cylinder that inherits currently set fn value
 t.cylinder = function (params) {
+	if (params === undefined) params = {};
 	params.fn = this.fn;
 	return cylinder(params);
 };
 
 // centered cube
 t.ccube = function (size) {
+	if (size === undefined) size = [1,1,1];
 	return cube(size).translate([-size[0]/2,-size[1]/2,0])
 };
 
@@ -161,6 +163,7 @@ t.roundedpolycube = function (l1, l2) {
 		r1: l1.r,
 		r2: l2.r, 
 		h: h,
+		fn: t.fn
 	});
 
 	return union([
