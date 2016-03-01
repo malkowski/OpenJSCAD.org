@@ -14,7 +14,7 @@ t.extrude = function (points, height) {
 
 // cylinder that inherits currently set fn value
 t.cylinder = function (params) {
-	if (params === undefined) params = {};
+	if (params === undefined) params = { d: 1, h: 1 };
 	params.fn = this.fn;
 	return cylinder(params);
 };
