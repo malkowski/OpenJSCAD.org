@@ -831,7 +831,7 @@ OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, options, call
         var end = svgEl.getTotalLength();
         for (var i=0; i<steps; i++) {
           var p = svgEl.getPointAtLength(i/steps * end);
-          points.push([ p.x, p.y ]);
+          points.unshift([ p.x, p.y ]);
         }
         worker.postMessage({
           "cmd": "svg.getPointsFromPath",

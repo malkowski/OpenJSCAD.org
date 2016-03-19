@@ -25,17 +25,6 @@ function main() {
             getPointsFromPath(shapes.shapes["top_solid"], fn, function(top_solid){
                 getPointsFromPath(shapes.shapes["bottom_solid"], fn, function(bottom_solid){
 
-                    bottomHoleReversed = [];
-                    bottom_hole.forEach(function(p){
-                        bottomHoleReversed.unshift(p);
-                    });
-                    bottom_hole = bottomHoleReversed;
-                    topHoleReversed = [];
-                    top_hole.forEach(function(p){
-                        topHoleReversed.unshift(p);
-                    });
-                    top_hole = topHoleReversed;
-
                     render(
                         solidFromLayers([bottom_solid,top_solid], 20)
                         .subtract([
