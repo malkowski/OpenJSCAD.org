@@ -820,6 +820,26 @@ OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, options, call
       {
         console.log(e.data.txt);
       }
+
+      else if (e.data.cmd == "svg.getPointsFromPath") {
+        //console.log("getPointsFromPath", e.data.svg);
+        var svgEl = $(e.data.svg)[0].children[0];
+        var steps = e.data.steps || 32;
+  
+        var points = [];
+          
+        var end = svgEl.getTotalLength();
+        for (var i=0; i<steps; i++) {
+          var p = svgEl.getPointAtLength(i/steps * end);
+          points.push([ p.x, p.y ]);
+        }
+        worker.postMessage({
+          "cmd": "svg.getPointsFromPath",
+          "points": JSON.stringify(points),
+          "id": e.data.id,
+        });
+      }
+
     }
   };
   worker.onerror = function(e) {
@@ -1278,7 +1298,6 @@ OpenJsCad.Processor.prototype = {
   {
     this.abort();
     this.setError("");
-    this.clearViewer();
     this.processing = true;
     this.statusspan.innerHTML = "Rendering code, please wait <img id=busy src='imgs/busy.gif'>";
     this.renderStartTime = Date.now();
@@ -1296,6 +1315,7 @@ OpenJsCad.Processor.prototype = {
           this.worker = OpenJsCad.parseJsCadScriptASync(this.script, paramValues, this.options, function(err, obj) {
           that.processing = false;
           that.worker = null;
+          that.clearViewer();
           if(err)
           {
             that.setError(err);
@@ -1324,6 +1344,7 @@ OpenJsCad.Processor.prototype = {
       {
         this.statusspan.innerHTML = "Rendering code, please wait <img id=busy src='imgs/busy.gif'>";
         var obj = OpenJsCad.parseJsCadScriptSync(this.script, paramValues, this.debugging);
+        that.clearViewer();
         that.setCurrentObject(obj);
         console.log("Render completed in %d seconds", (Date.now()-that.renderStartTime)/1000);
         that.processing = false;
