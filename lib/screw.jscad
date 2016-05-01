@@ -1,4 +1,6 @@
-function screw (arguments) {};
+function screw (screwName) {
+	return screw.getByName(screwName);
+};
 
 screw.fn = 32;
 
