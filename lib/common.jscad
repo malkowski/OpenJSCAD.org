@@ -7,6 +7,38 @@ t.point2mm = function (pointValue) {
 	return pointValue * 0.352778;
 };
 
+// convert Vector3D object to a JSON stringifiable point for debugging
+t.dumpPoint = function (v) {
+	if (v instanceof CSG.Vector3D) {
+		return [
+			parseFloat( (v.x||0).toFixed(3) ),
+			parseFloat( (v.y||0).toFixed(3) ),
+			parseFloat( (v.z||0).toFixed(3) ),
+		];
+	}
+	else {
+		return [
+			parseFloat( (v[0]||0).toFixed(3) ),
+			parseFloat( (v[1]||0).toFixed(3) ),
+			parseFloat( (v[2]||0).toFixed(3) ),
+		];
+	}
+};
+t.dumpPoints = function (points) {
+	return points.map(t.dumpPoint);
+};
+
+t.getPolygonFromCAG = function (cag) {
+	var paths = cag.getOutlinePaths();
+
+	var points = [];
+	for (var i=0; i < paths[0].points.length; i++) {
+		points.push( paths[0].points[i] );
+	}
+
+	return CSG.Polygon.createFromPoints(points);
+};
+
 // extrude path
 t.extrude = function (points, height) {
 	return linear_extrude({ height: height }, polygon(points));
@@ -382,7 +414,85 @@ t.cylstack = function (layers) {
 	});    
 };
 
+/**
+ * d: center diameter
+ * w: wall thickness
+ * h: height
+ */
+t.cylRing = function (params) {
+	if (! params.h) params.h = 1;
+
+	var cyl = { h: params.h },
+	    hole = { h: params.h };
+
+	if (params.r) {
+		params.d=params.r*2;
+	}
+	else if (params.r1 && params.r2) {
+		params.d1 = params.r1*2; params.d2 = params.r2*2;
+	}
+
+	if (params.d) {
+		cyl.d = params.d+params.w;
+		hole.d = params.d-params.w;
+	}
+	else if (params.d1 && params.d2) {
+		cyl.d1 = params.d1 + params.w;
+		cyl.d2 = params.d2 + params.w;
+		hole.d1 = params.d1 - params.w;
+		hole.d2 = params.d2 - params.w;
+	}
+
+	return t.cylinder(cyl)
+	.subtract(t.cylinder(hole))
+};
+
+t.screwThread = function (params) {
+    if (! params) params = {};
+    if (! params.outerD) params.outerD = 20;
+    if (! params.wallH) params.wallH = 1;
+    if (! params.threadInset) params.threadInset = 0.5;
+    if (! params.layerH) params.layerH = 1;
+    if (! params.numTurns) params.numTurns = 10;
+    if (! params.fn) params.fn = t.fn;
+
+    var w = params.wallH/2;
+    var v = params.layerH/2 - params.threadInset;
+    var h = params.layerH/2;
+
+    var outline = CSG.Polygon.createFromPoints([
+    	[  h, -v, 0 ],
+		[  h,  v, 0 ],
+		[  w,  h, 0 ],
+		[ -w,  h, 0 ],
+		[ -h,  v, 0 ],
+		[ -h, -v, 0 ],
+		[ -w, -h, 0 ],
+        [  w, -h, 0 ],
+		[  h, -v, 0 ],
+    ]);
+
+	return outline.solidFromSlices({
+		numslices: params.numTurns * params.fn,
+		callback: function (t,slice) {
+			return this
+            .translate([
+                params.layerH * params.numTurns * t,
+                params.outerD/2 - params.layerH/2,
+                0
+            ])
+            .rotateX(-360/params.fn * slice)
+		}
+	})
+	.rotateY(-90)
+	.mirroredX()
+	.translate([ 0, 0, -params.layerH/2 ])
+
+};
+
+
 t.screwthread = function (params) {
+	throw new Error("t.screwthread is deprecated, use t.screwThread instead");
 	var defaultParams = {
 		innerD:     1,
 		outerD:    20,
