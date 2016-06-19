@@ -28,6 +28,15 @@ t.dumpPoints = function (points) {
 	return points.map(t.dumpPoint);
 };
 
+t.mirrorXY = function (shape) {
+	return union([
+		shape,
+		shape.mirroredX(),
+		shape.mirroredY(),
+		shape.mirroredY().mirroredX(),
+	])
+};
+
 t.getPolygonFromCAG = function (cag) {
 	var paths = cag.getOutlinePaths();
 
