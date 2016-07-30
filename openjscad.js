@@ -1487,6 +1487,18 @@ OpenJsCad.Processor.prototype = {
     return "Download "+ext.toUpperCase();
   },
 
+  prepareForRender: function() {
+    if (window.postMessage && window.parent) {
+      var message = {
+        "messageType": "prepareForRender", 
+        "messageData": { 
+        }
+      };
+      console.trace("window.postMessage: %O", message);
+      window.postMessage(message, "*");
+    }
+  },
+
   updateParentDownloadLink: function() {
     if (window.postMessage && window.parent) {
       var message = {
