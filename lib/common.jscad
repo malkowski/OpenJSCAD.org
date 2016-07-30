@@ -180,6 +180,46 @@ t.mirror = function (shape, axes) {
 };
 
 /**
+ * 20160723 attempt to quickly make a useful shape.
+ * t.rcpoly([ { size: [x,y,z], r: cornerRadius }, { size: [x,y,z], r: cornerRadius } ])
+ */
+t.rcpoly = function (layers) {
+
+	var slices = [];
+
+	layers.forEach(function(layer){
+		if (layer.r > Math.min(layer.size[0], layer.size[1])/2) {
+			layer.r = Math.min(size[0], size[1])/2;
+		}
+
+		slices.push({
+			shape: CAG.roundedRectangle({
+				center: [ 0, 0 ],
+				radius: [ layer.size[0]/2, layer.size[1]/2 ],
+				roundradius: layer.r,
+				resolution: t.fn,
+			}),
+			z: layer.size[2],
+		});
+	})
+
+	return new CSG.Polygon.createFromPoints([ [0,0,0], [1,0,0], [1,1,0], [0,1,0] ])
+	.solidFromSlices({
+		numslices: slices.length,
+		loop: false,
+		callback: function (t, i) {
+			// t: 0..1, i: 0..numslices
+
+			var points = slices[i].shape.getOutlinePaths()[0].points;
+			return new CSG.Polygon.createFromPoints(points)
+			.translate([ 0, 0, slices[i].z ])
+
+		}
+	});
+
+};
+
+/**
  * Rounded polycube: in essence, two rounded rectangles at different Z planes centered along x/y.
  * Different width/depth/r of each layer is possible.
  *
