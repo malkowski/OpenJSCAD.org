@@ -407,7 +407,6 @@ OpenJsCad.Viewer.prototype = {
                gl.vertex(plate[0]/2, y, 0);
              }
          }
-
          gl.color(0,.6,.9,.5); // -- major grid
          for(var x=-plate[0]/2; x<=plate[0]/2; x+=10) {
             if(x!=0) {
@@ -452,7 +451,7 @@ OpenJsCad.Viewer.csgToMeshes = function(initial_csg) {
   var numpolygons = polygons.length;
   for(var j = 0; j < numpolygons; j++) {
     var polygon = polygons[j];
-    var color = [1,.4,1,1];      // -- default color
+    var color = [0.9,0,0,1];      // -- default color
 
     if(polygon.shared && polygon.shared.color) {
       color = polygon.shared.color;
@@ -786,6 +785,26 @@ OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, options, call
       {
         console.log(e.data.txt);
       }
+
+      else if (e.data.cmd == "svg.getPointsFromPath") {
+        //console.log("getPointsFromPath", e.data.svg);
+        var svgEl = $(e.data.svg)[0].children[0];
+        var steps = e.data.steps || 32;
+  
+        var points = [];
+          
+        var end = svgEl.getTotalLength();
+        for (var i=0; i<steps; i++) {
+          var p = svgEl.getPointAtLength(i/steps * end);
+          points.unshift([ p.x, p.y ]);
+        }
+        worker.postMessage({
+          "cmd": "svg.getPointsFromPath",
+          "points": JSON.stringify(points),
+          "id": e.data.id,
+        });
+      }
+
     }
   };
   worker.onerror = function(e) {
@@ -900,6 +919,7 @@ OpenJsCad.Processor = function(containerdiv, onchange) {
   //this.viewerwidth = 1200;
   //this.viewerheight = 800;
   this.initialViewerDistance = 250;
+  //this.processing = false;
   this.currentObject = null;
   this.hasOutputFile = false;
   this.worker = null;
@@ -1279,7 +1299,9 @@ OpenJsCad.Processor.prototype = {
     this.abort();
     this.setError("");
     this.clearViewer();
+    //this.processing = true;
     this.statusspan.innerHTML = "Rendering code, please wait <img id=busy src='imgs/busy.gif'>";
+    this.renderStartTime = Date.now();
     this.enableItems();
     var that = this;
     var paramValues = this.getParamValues();
@@ -1294,6 +1316,7 @@ OpenJsCad.Processor.prototype = {
           that.state = 1; // processing
           this.worker = OpenJsCad.parseJsCadScriptASync(this.script, paramValues, this.options, function(err, obj) {
           that.worker = null;
+          that.clearViewer();
           if(err)
           {
             that.setError(err);
@@ -1303,6 +1326,7 @@ OpenJsCad.Processor.prototype = {
           else
           {
             that.setCurrentObject(obj);
+            console.log("Render completed in %d seconds", (Date.now()-that.renderStartTime)/1000);
             that.statusspan.innerHTML = "Ready.";
             that.state = 2; // complete
             that.generateOutputFile();
@@ -1325,7 +1349,10 @@ OpenJsCad.Processor.prototype = {
         that.state = 1; // processing
         this.statusspan.innerHTML = "Rendering code, please wait <img id=busy src='imgs/busy.gif'>";
         var obj = OpenJsCad.parseJsCadScriptSync(this.script, paramValues, this.debugging);
+        that.clearViewer();
         that.setCurrentObject(obj);
+        //console.log("Render completed in %d seconds", (Date.now()-that.renderStartTime)/1000);
+        //that.processing = false;
         that.statusspan.innerHTML = "Ready.";
         that.state = 2; // complete
       }
