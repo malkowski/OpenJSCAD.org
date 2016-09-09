@@ -34,7 +34,7 @@ Todo:
 -->
 <title>OpenJSCAD.org</title>
 <link rel="shortcut icon" href="imgs/favicon.png" type="image/x-png">
-<link rel="stylesheet" href="jquery/themes/base/jquery-ui.css" />
+<link rel="stylesheet" href="jquery/themes/smoothness/jquery-ui.css" />
 <script src="jquery/jquery-1.9.1.js"></script>
 <script src="jquery/jquery-ui.js"></script>
 <script src="jquery/jquery.hammer.js"></script>
@@ -75,10 +75,6 @@ if(navigator.userAgent.match(/(opera|chrome|safari|firefox|msie)/i))
 $(document).ready(function() {
    $("#menu").height($(window).height());       // initial height
 
-   $(window).resize(function() {                // adjust the relevant divs
-      $("#menu").height($(window).height());
-      $("#menuHandle").css({top: '45%'});
-   });
    // hide slide-menu after user-defined interval
    setTimeout( function(){$('#menu').css('left','-280px');},config.startup.menuAutoHideTimeout);
 
@@ -188,20 +184,8 @@ Get your copy/clone/fork from <a href="https://github.com/Spiritdude/OpenJSCAD.o
 <a class=okButton href='#' onclick="$('#about').hide(); return false;"> OK </a>
 </div>
 
-<div id="editor">// -- OpenJSCAD.org logo
-
-function main() {
-   return union(
-      difference(
-         cube({size: 3, center: true}),
-         sphere({r:2, center: true})
-      ),
-      intersection(
-          sphere({r: 1.3, center: true}),
-          cube({size: 2.1, center: true})
-      )
-   ).translate([0,0,1.5]).scale(10);
-}
+<div id="editorPanel">
+	<div id="editor"></div>
 </div>
 
 <script>
@@ -463,7 +447,37 @@ var gRootFs = [];             // root(s) of folders
 
 var _includePath = './';
 
+function onWindowResize () {
+	// adjust the relevant divs
+	$("#menu").height($(window).height());
+	$("#menuHandle").css({ top: '45%' });
+
+	// resize and redraw viewer canvas
+	if (gProcessor && gProcessor.viewerdiv && gProcessor.viewer && gProcessor.viewer.gl) {
+		console.log("resizing viewer div / canvas");
+
+		var w = $(window).width() - $('#editorPanel').width();
+		gProcessor.viewer.gl.canvas.clientWidth = w;
+		gProcessor.viewerdiv.style.width = ""+w+"px";
+
+		gProcessor.viewer.gl.resizeCanvas()
+	}
+	else {
+		console.warn("gprocessor is not defined");
+	}
+};
+
+
 function onload() {
+
+   $(window).resize(function(){ onWindowResize() })
+
+   $('#editorPanel').resizable({
+      "handles"  : "w",
+      "minWidth" : 25,
+      "resize"   : function() { onWindowResize() },
+   });
+
    // -- http://ace.ajax.org/#nav=howto
    editor = ace.edit("editor");
    editor.setTheme("ace/theme/chrome");
@@ -498,10 +512,11 @@ function onload() {
          }
       };
    }
-   
+ 
    gProcessor = new OpenJsCad.Processor(document.getElementById("viewerContext"));
    setupDragDrop();
    //gProcessor.setDebugging(debugging); 
+
    if(me=='web-online') {    // we are online, fetch first example
       //    gProcessor.setJsCad(editor.getValue());
 
