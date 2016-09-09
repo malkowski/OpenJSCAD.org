@@ -454,16 +454,12 @@ function onWindowResize () {
 
 	// resize and redraw viewer canvas
 	if (gProcessor && gProcessor.viewerdiv && gProcessor.viewer && gProcessor.viewer.gl) {
-		console.log("resizing viewer div / canvas");
 
 		var w = $(window).width() - $('#editorPanel').width();
 		gProcessor.viewer.gl.canvas.clientWidth = w;
 		gProcessor.viewerdiv.style.width = ""+w+"px";
 
 		gProcessor.viewer.gl.resizeCanvas()
-	}
-	else {
-		console.warn("gprocessor is not defined");
 	}
 };
 
