@@ -28,6 +28,14 @@ t.dumpPoints = function (points) {
 	return points.map(t.dumpPoint);
 };
 
+t.mirrorX = function (shape) {
+	return union([ shape, shape.mirroredX() ]);
+};
+
+t.mirrorY = function (shape) {
+	return union([ shape, shape.mirroredY() ]);
+};
+
 t.mirrorXY = function (shape) {
 	return union([
 		shape,
@@ -496,6 +504,11 @@ t.cylRing = function (params) {
 	.subtract(t.cylinder(hole))
 };
 
+/*
+// this will basically be t.cylstack but instead of an array of [w,d,z] values, will be an array of [centerVector,radius] values
+t.layeredCylinder = function (layers) {
+};
+
 t.screwThread = function (params) {
     if (! params) params = {};
     if (! params.outerD) params.outerD = 20;
@@ -538,7 +551,7 @@ t.screwThread = function (params) {
 	.translate([ 0, 0, -params.layerH/2 ])
 
 };
-
+*/
 
 t.screwthread = function (params) {
 	throw new Error("t.screwthread is deprecated, use t.screwThread instead");
