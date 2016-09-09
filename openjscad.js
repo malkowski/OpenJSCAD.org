@@ -1062,7 +1062,7 @@ OpenJsCad.Processor.prototype = {
     this.statusspan.id = 'statusspan';
     this.statusspan.style.marginRight = '2em';
     this.statusbuttons = document.createElement("span");
-    this.statusbuttons.style.float = "right";
+	this.statusbuttons.id = "statusbuttons";
     this.statusdiv.appendChild(this.statusspan);
     this.statusdiv.appendChild(this.statusbuttons);
     this.abortbutton = document.createElement("button");
