@@ -686,7 +686,8 @@ OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, options, call
   var baselibraries = [
     "csg.js",
     "openjscad.js",
-    "openscad.js"
+    "openscad.js",
+    "lib/core.js",
     //"jquery/jquery-1.9.1.js",
     //"jquery/jquery-ui.js"
   ];
@@ -819,6 +820,9 @@ OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, options, call
       else if(e.data.cmd == "log")
       {
         console.log(e.data.txt);
+      }
+      else if (e.data.cmd == "core.showDebugMessage") {
+        gProcessor.showDebugMessage({ text: e.data.text, stack: e.data.stack });
       }
 
       else if (e.data.cmd == "svg.getPointsFromPath") {
@@ -1054,6 +1058,9 @@ OpenJsCad.Processor.prototype = {
     this.errordiv = document.getElementById("errordiv");
     this.errorpre = document.createElement("pre"); 
     this.errordiv.appendChild(this.errorpre);
+    this.debugdiv = document.getElementById("debugdiv");
+    this.debugpre = document.createElement("pre"); 
+    this.debugdiv.appendChild(this.debugpre);
     //this.statusdiv = document.createElement("div");
     this.statusdiv = document.getElementById("statusdiv");
     this.statusdiv.className = "statusdiv";
@@ -1211,7 +1218,30 @@ OpenJsCad.Processor.prototype = {
     this.errorpre.textContent = txt;
     this.enableItems();
   },
-  
+
+  // show debug messages for debugging current jscad script
+  // in the future, this may change to a persistent log that is only cleared out when render is initiated.
+  // for now, just show one message at a time and clear existing text out once it's faded away.
+  showDebugMessage: function (message) {
+    var self = this;
+    clearTimeout(this._debugFadeTimeout);
+    clearInterval(this._debugFadeInterval);
+    this.debugpre.textContent = message.text + "\n\n" + message.stack;
+    this.debugdiv.style.opacity = 1;
+    this.debugdiv.style.display = "block";
+    this._debugFadeTimeout = setTimeout(function(){
+		var fadePercent = 0;
+        self._debugFadeInterval = setInterval(function(){
+			self.debugdiv.style.opacity -= 0.25;
+            if (self.debugdiv.style.opacity == 0) {
+				clearInterval(self._debugFadeInterval);
+				self.debugpre.textContent = "";
+				self.debugdiv.display = "none";
+			}
+		}, 150);
+    }, 5000);
+  }, 
+ 
   setDebugging: function(debugging) {
     this.debugging = debugging;
   },
