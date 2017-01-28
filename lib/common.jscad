@@ -36,6 +36,10 @@ t.mirrorY = function (shape) {
 	return union([ shape, shape.mirroredY() ]);
 };
 
+t.mirrorZ = function (shape) {
+	return union([ shape, shape.mirroredZ() ]);
+};
+
 t.mirrorXY = function (shape) {
 	return union([
 		shape,
@@ -44,6 +48,23 @@ t.mirrorXY = function (shape) {
 		shape.mirroredY().mirroredX(),
 	])
 };
+
+/**
+ * return union of (numCopies) shapes, evenly rotated around Z axis
+ * @param CSG shape
+ * @param int numCopies How many copies to make
+ * @param int maxAngle maximum rotation angle, e.g. 180 (useful for shapes mirrored like a centered cube)
+ */
+t.rotateDuplicate = function (shape, numCopies, maxAngle) {
+	if (! maxAngle) maxAngle = 360
+	var angle = maxAngle/numCopies
+
+	var out = []
+	for (var a=0; a<maxAngle; a+=angle) {
+		out.push(shape.rotateZ(a))
+	}
+	return union(out)
+}
 
 t.getPolygonFromCAG = function (cag) {
 	var paths = cag.getOutlinePaths();
@@ -460,15 +481,26 @@ t.cylstack = function (layers) {
 	// eventually, each circle representing a slice
 	// will be able to define both width and depth
 
+	// allow for layers to skip "Y" axis, e.g. [ d, z ] => [ d, d, z ]
+	layers = layers.map(function(l){
+		if (l.length < 3) {
+			l = [ l[0], l[0], l[1] ]
+		}
+		return l
+	});
+
+	var fn = (arguments.length > 1 && arguments[1].fn) ? arguments[1].fn : t.fn;
+
 	return t._layerStacker(layers, function(p0,p1){
 		return cylinder({ 
 			d1: p0[0], 
 			d2: p1[0], 
 			h: Math.abs(p1[2]-p0[2]),
-			fn: t.fn
+			fn: fn
 		})
 		.translate([ 0, 0, p0[2] ])
-	});    
+	});
+
 };
 
 /**
