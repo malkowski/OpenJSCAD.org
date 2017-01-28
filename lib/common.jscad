@@ -185,6 +185,110 @@ t.sccube = function (params) {
 	return union(shapes);
 };
 
+
+/**
+ * like torus, but with distinct inner/outer diameter, corner radius, optional inner cutout
+ *
+ * t.roundedCylinder({
+ *     outerD: 
+ *     innerD: (if undefined, do not cut inner hole)
+ *     h: 
+ *     cornerR: h/2 (corner radius, min 0 (regular cylinder), max h/2)
+ *     fni: t.fn (steps in 2D circle)
+ *     fno: t.fn (steps around Z axis)
+ * })
+ */
+t.roundedCylinder = function (params) {
+
+    var outerD = params.outerD
+    var h = params.h
+
+    var innerD = params.innerD ? params.innerD : 0
+
+    var fni = params.fni===undefined 
+            ? t.fn 
+            : params.fni
+
+    var fno = params.fno===undefined 
+            ? t.fn 
+            : params.fno
+
+    var cornerR = params.cornerR===undefined 
+                ? h/2 
+                : params.cornerR
+
+    if (cornerR > h/2) cornerR = h/2
+
+    var outerCurve = torus({
+        // radius of 2D circle 
+        ri: cornerR,
+
+        // steps in 2D circle
+        fni: fni,
+
+        // radius of torus
+        ro: outerD/2-cornerR,
+
+        // steps around Z axis    
+        fno: fno,
+    })
+    .subtract([
+        t.ccube([ 1000,1000,1000 ])
+    ])
+
+    var halfShape = union([
+        outerCurve,
+        t.cylinder({ d: outerD-cornerR*2, h: cornerR, fn: fno })
+        .translate([ 0, 0, -cornerR ]),
+    ])
+
+    var flatShape = union([
+        t.cylinder({ d: outerD, h: h-cornerR*2, fn: fno }),
+    ])
+
+    if (innerD) {
+
+        halfShape = halfShape.subtract([
+            t.cylinder({ d: innerD+cornerR*2, h: cornerR, fn: fno })
+            .translate([ 0, 0, -cornerR ]),
+        ])
+        .union([
+            torus({
+                // radius of 2D circle 
+                ri: cornerR,
+
+                // steps in 2D circle
+                fni: fni,
+        
+                // radius of torus
+                ro: innerD/2+cornerR,
+
+                // steps around Z axis    
+                fno: fno,
+            })
+            .subtract([
+                t.ccube([ 1000,1000,1000 ])
+            ])
+        ])
+
+        flatShape = flatShape.subtract([
+            t.cylinder({ d: innerD, h: h, fn: fno }),
+        ])
+    }
+
+    var out = [
+        halfShape.translate([ 0, 0, cornerR ]),
+        halfShape.mirroredZ().translate([ 0, 0, h-cornerR ]),
+    ]
+
+    if (cornerR < h/2) {
+        out.push(flatShape.translate([ 0, 0, cornerR ]))
+    }
+
+    return union(out)
+
+}
+
 // axes = vector e.g. [0,1,0]. partial values are rounded up to 1.
 t.mirror = function (shape, axes) {
 
