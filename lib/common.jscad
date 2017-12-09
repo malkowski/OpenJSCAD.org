@@ -50,6 +50,19 @@ t.mirrorXY = function (shape) {
 };
 
 /**
+ * getBounds: ugh, i'm tired of typing this out
+ */
+t.getBounds = function (shape) {
+
+	var b = shape.getBounds()
+    var s = b[1].minus(b[0])
+    var c = b[0].plus(s.times(0.5))
+
+	return { b:b, s:s, c:c }
+
+}
+
+/**
  * return union of (numCopies) shapes, evenly rotated around Z axis
  * @param CSG shape
  * @param int numCopies How many copies to make
