@@ -847,7 +847,8 @@ OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, options, call
     }
   };
   worker.onerror = function(e) {
-    var errtxt = "Error in line "+e.lineno+": "+e.message;
+    //var errtxt = "Error in line "+e.lineno+": "+e.message;
+    var errtxt = "Error in line "+(e.lineno-5)+": "+e.message;
     callback(errtxt, null);
   };
   worker.postMessage({

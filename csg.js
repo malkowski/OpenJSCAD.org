@@ -2270,6 +2270,10 @@ CSG.Vector3D.prototype = {
 		return "(" + this._x.toFixed(2) + ", " + this._y.toFixed(2) + ", " + this._z.toFixed(2) + ")";
 	},
 
+	toJSON: function() {
+		return [ this._x, this._y, this._z ];
+	},
+
 	// find a vector that is somewhat perpendicular to this one
 	randomNonParallelVector: function() {
 		var abs = this.abs();
@@ -2650,6 +2654,9 @@ CSG.Polygon.fromObject = function(obj) {
 CSG.Polygon.prototype = {
 	// check whether the polygon is convex (it should be, otherwise we will get unexpected results)
 	checkIfConvex: function() {
+		// i'd rather have a buggy shape than no shape at all.
+		// update, after trying to actually use one of these buggy shapes: lol notsomuch
+		return;
 		if(!CSG.Polygon.verticesConvex(this.vertices, this.plane.normal)) {
 			CSG.Polygon.verticesConvex(this.vertices, this.plane.normal);
 			throw new Error("Not convex!");
@@ -5398,13 +5405,20 @@ CAG.prototype = {
 		return [minpoint, maxpoint];
 	},
 
-   center: function(c) {
-      if(!c.length) c = [c,c];
-      var b = this.getBounds();
-      return this.translate([
-         c[0]?-(b[1].x-b[0].x)/2-b[0].x:0,
-         c[1]?-(b[1].y-b[0].y)/2-b[0].y:0]);
-   },
+	/**
+	 * param CSG.Vector2D c Position to center polygon to (default=[0,0])
+	 */
+	center: function(c) {
+    	if (! c) c = new CSG.Vector2D(0,0)
+		if (! c instanceof CSG.Vector2D) c = new CSG.Vector2D(c)
+
+		var b = this.getBounds()
+
+		return this.translate([
+			-( b[0].x + (b[1].x-b[0].x)/2 ),
+			-( b[0].y + (b[1].y-b[0].y)/2 )
+		])
+	},
 
 	isSelfIntersecting: function() {
 		var numsides = this.sides.length;

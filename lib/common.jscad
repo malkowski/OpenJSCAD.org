@@ -54,11 +54,35 @@ t.mirrorXY = function (shape) {
  */
 t.getBounds = function (shape) {
 
-	var b = shape.getBounds()
-    var s = b[1].minus(b[0])
-    var c = b[0].plus(s.times(0.5))
+	if (shape.getBounds || shape.boundingBox) {
+		var b = shape.getBounds ? shape.getBounds() : shape.boundingBox()
+		var s = b[1].minus(b[0])
+		var c = b[0].plus(s.times(0.5))
 
-	return { b:b, s:s, c:c }
+		return { b:b, s:s, c:c }
+	}
+	else {
+		var points = shape
+		var b = [
+			[  Infinity,  Infinity ],
+			[ -Infinity, -Infinity ],
+		]
+		points.forEach(function(p){
+			if (p[0] < b[0][0]) b[0][0] = p[0]
+			if (p[1] < b[0][1]) b[0][1] = p[1]
+			if (p[0] > b[1][0]) b[1][0] = p[0]
+			if (p[1] > b[1][1]) b[1][1] = p[1]
+		})
+		var s = [
+			b[1][0] - b[0][0],
+			b[1][1] - b[0][1],
+		]
+		var c = [
+			b[0][0] + s[0]*0.5,
+			b[0][1] + s[1]*0.5,
+		]
+		return { b:b, s:s, c:c }
+	}
 
 }
 
