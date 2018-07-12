@@ -749,6 +749,7 @@ OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, options, call
   workerscript += "  OpenJsCad.runMainInWorker("+JSON.stringify(mainParameters)+");";
 //  workerscript += "  if(typeof(main) != 'function') throw new Error('Your jscad file should contain a function main() which returns a CSG solid.');\n";
 //  workerscript += "  var csg; try {csg = main("+JSON.stringify(mainParameters)+"); self.postMessage({cmd: 'rendered', csg: csg});}";
+  workerscript += "  self.postMessage({ cmd: 'log', text: 'whee' });";
 //  workerscript += "  catch(e) {var errtxt = e.stack; self.postMessage({cmd: 'error', err: errtxt});}";
   workerscript += "}},false);\n";
 
@@ -789,6 +790,7 @@ OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, options, call
   }
   //workerscript += "function includePath(p) { _includePath = p; }\n";
   var blobURL = OpenJsCad.textToBlobUrl(workerscript);
+  //console.log(workerscript)
   
   if(!window.Worker) throw new Error("Your browser doesn't support Web Workers. Please try the Chrome or Firefox browser instead.");
   var worker = new Worker(blobURL);
@@ -1180,7 +1182,22 @@ OpenJsCad.Processor.prototype = {
     this.hasValidCurrentObject = false;
     this.enableItems();
   },
-  
+
+  invalidateCurrentObjects: function() {
+    this.hasValidCurrentObject = false;
+    this.viewer.meshes.forEach(function(mesh){
+      mesh.colors.forEach(function(color){
+        color[0] = 0.001 + color[0] * 0.999
+        color[1] = 0.001 + color[1] * 0.999
+        color[2] = 0.001 + color[2] * 0.999
+        color[3] = 0.5
+      })
+      mesh.computeWireframe()
+      mesh.computeNormals()
+    })
+    this.viewer.onDraw()
+  },
+
   abort: function() {
     if(this.processing)
     {
@@ -1250,10 +1267,12 @@ OpenJsCad.Processor.prototype = {
   // script: javascript code
   // filename: optional, the name of the .jscad file
   setJsCad: function(script, filename) {
+	console.error('setJsCad');
     if(!filename) filename = "openjscad.jscad";
     filename = filename.replace(/\.jscad$/i, "");
     this.abort();
-    this.clearViewer();
+    this.invalidateCurrentObjects();
+    //this.clearViewer();
     this.paramDefinitions = [];
     this.paramControls = [];
     this.script = null;
@@ -1344,23 +1363,23 @@ OpenJsCad.Processor.prototype = {
       {
           console.log("trying async compute");
           this.worker = OpenJsCad.parseJsCadScriptASync(this.script, paramValues, this.options, function(err, obj) {
-          that.processing = false;
-          that.worker = null;
-          that.clearViewer();
-          if(err)
-          {
-            that.setError(err);
-            that.statusspan.innerHTML = "Error.";
-          }
-          else
-          {
-            that.setCurrentObject(obj);
-            console.log("Render completed in %d seconds", (Date.now()-that.renderStartTime)/1000);
-            that.statusspan.innerHTML = "Ready.";
-          }
-          that.enableItems();
-          if(that.onchange) that.onchange();
-        });
+            that.processing = false;
+            that.worker = null;
+            that.clearViewer();
+            if(err)
+            {
+              that.setError(err);
+              that.statusspan.innerHTML = "Error.";
+            }
+            else
+            {
+              that.setCurrentObject(obj);
+              console.log("Render completed in %d seconds", (Date.now()-that.renderStartTime)/1000);
+              that.statusspan.innerHTML = "Ready.";
+            }
+            that.enableItems();
+            if(that.onchange) that.onchange();
+          });
       }
       catch(e)
       {
