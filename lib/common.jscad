@@ -87,6 +87,14 @@ t.getBounds = function (shape) {
 }
 
 /**
+ * center shape along x/y axis, place bottom at z=0
+ */
+t.centerShape = function (shape) {
+    var bounds = t.getBounds(shape)
+    return shape.translate([ -bounds.c.x, -bounds.c.y, -bounds.b[0].z ])
+}
+
+/**
  * return union of (numCopies) shapes, evenly rotated around Z axis
  * @param CSG shape
  * @param int numCopies How many copies to make
