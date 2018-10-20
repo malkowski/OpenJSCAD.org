@@ -495,6 +495,10 @@ t.reflectCylinderAtCornersQuad = function (arguments) {
 /**
  * Triangular Prism: specify width/depth/height, done.
  * yeah yeah it's not a "triangle", whatever, this is quicker/easier to type repeatedly.
+ * 
+ * Example:
+ *   t.triangle([ width, depth, height ])
+ *
  */
 t.triangle = function (dimensions) {
 
