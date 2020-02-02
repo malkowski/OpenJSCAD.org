@@ -591,6 +591,9 @@ OpenJsCad.runMainInWorker = function(mainParameters) {
     if( (typeof(result) != "object") || ((!(result instanceof CSG)) && (!(result instanceof CAG)))) {
       //throw new Error("Your main() function should return a CSG solid or a CAG area.");
     }
+	if (! result) {
+		result = cube([1,1,1]).translate([1,1,1]).subtract(cube([10,10,10]))
+	}
     if(result.length) {                   // main() return an array, we consider it a bunch of CSG not intersecting
        var o = result[0];
        if(o instanceof CAG) {
@@ -829,14 +832,21 @@ OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, options, call
 
       else if (e.data.cmd == "svg.getPointsFromPath") {
         //console.log("getPointsFromPath", e.data.svg);
-        var svgEl = $(e.data.svg)[0].children[0];
-        var steps = e.data.steps || 32;
-  
+        var svgEl = $(e.data.svg)[0].children[0]
+        var lengthMinusPad = svgEl.getTotalLength() - e.data.padEnd - e.data.padStart
+
+        var steps = e.data.steps || 32
+
+		if (e.data.pointDistance) {
+			steps = Math.floor( lengthMinusPad / e.data.pointDistance )
+		}
+
+		//console.debug("svg.getPointsFromPath WORKER: pointDistance = " + e.data.pointDistance + ", totalLength = " + lengthMinusPad.toFixed(1) + ", steps = " + steps)
+
         var points = [];
           
-        var end = svgEl.getTotalLength();
         for (var i=0; i<steps; i++) {
-          var p = svgEl.getPointAtLength(i/steps * end);
+          var p = svgEl.getPointAtLength(e.data.padStart + i/steps * lengthMinusPad);
           points.unshift([ p.x, p.y ]);
         }
         worker.postMessage({
@@ -1064,6 +1074,22 @@ OpenJsCad.Processor.prototype = {
     this.debugdiv = document.getElementById("debugdiv");
     this.debugpre = document.createElement("pre"); 
     this.debugdiv.appendChild(this.debugpre);
+    this.debugdiv.onclick = function(e) {
+		// if it's not fading out (or about to fade out), then click will hide div
+		if (that._debugFadeTimeout === undefined && that._debugFadeInterval === undefined) {
+			that.debugdiv.style.display = "none";
+			that.debugpre.textContent = "";
+		}
+		// otherwise, the click cancels the fadeout, and a second click matches the first condition ^^ and hides div.
+		else {
+    		clearTimeout(that._debugFadeTimeout);
+    		clearInterval(that._debugFadeInterval);
+			that.debugdiv.style.opacity = 1;
+    		that.debugdiv.style.display = "block";
+			that._debugFadeTimeout = undefined;
+			that._debugFadeInterval = undefined;
+		}
+	};
     //this.statusdiv = document.createElement("div");
     this.statusdiv = document.getElementById("statusdiv");
     this.statusdiv.className = "statusdiv";
