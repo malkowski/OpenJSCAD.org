@@ -38,6 +38,7 @@ a:visited {
 }
 
 #errordiv {
+   position: relative;
    overflow: scroll;
    border: 1px solid #000;
    padding: 5px 1.5em;
@@ -48,15 +49,62 @@ a:visited {
 }
 
 #debugdiv {
+   position: relative;
    overflow: auto;
    overflow-y: scroll;
    border: 1px solid #006;
-   padding: 5px 1.5em;
+   padding: 5px 0.5em;
    box-sizing: border-box;
    width: 59%;
    background: rgba(255,255,255,0.9);
    color: rgb(0,0,214);
 }
+
+#debugdiv pre {
+	margin: 24px 0 1em 0;
+	padding: 0.5em 1em;
+	border-top: 1px solid #00f;
+}
+
+#debugdiv .popupMessageTimestamp,
+#errordiv .popupMessageTimestamp {
+   position: absolute;
+   top: 6px;
+   right: 8px;
+   font-size: 14px;
+}
+
+#debugdiv .messageLabels {
+	display: block;
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	top: 4px;
+	left: 6px;
+}
+#debugdiv .messageLabels li {
+	list-style-type: none;
+	display: inline-block;
+	position: relative;
+	margin: 0 0.3em 0 0;
+	border: 2px solid #70c;
+	border-radius: 0.7em;
+	box-sizing: border-box;
+	font-size: 11px;
+	padding: 0.1em 0.7em;
+	font-weight: bold;
+}
+#debugdiv .messageLabels li.messageType.debug {
+	border-color: #00f;
+	background: #66f;
+	color: #fff;
+}
+#debugdiv .messageLabels li.sticky {
+	background: #ff9;
+	border-color: #6f6f00;
+	box-shadow: 0 0 5px rgba(150,150,0,0.5);
+}
+
 
 #editorPanel { 
    width: 40%;

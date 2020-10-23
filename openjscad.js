@@ -827,7 +827,12 @@ OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, options, call
         console.log(e.data.txt);
       }
       else if (e.data.cmd == "core.showDebugMessage") {
-        gProcessor.showDebugMessage({ text: e.data.text, stack: e.data.stack });
+        gProcessor.showDebugMessage({
+          text: e.data.text, 
+          stack: e.data.stack, 
+          sticky: e.data.sticky, 
+          fadeTimeout: e.data.fadeTimeout ? e.data.fadeTimeout : undefined
+        });
       }
 
       else if (e.data.cmd == "svg.getPointsFromPath") {
@@ -1067,13 +1072,23 @@ OpenJsCad.Processor.prototype = {
 
        //end of zoom control
     }
+
     //this.errordiv = document.createElement("div");
     this.errordiv = document.getElementById("errordiv");
-    this.errorpre = document.createElement("pre"); 
+    this.errorpre = document.createElement("pre");
     this.errordiv.appendChild(this.errorpre);
+    this.errordate = document.createElement("div");
+	this.errordate.classList.add("popupMessageTimestamp");
+	this.errordiv.appendChild(this.errordate);
+
     this.debugdiv = document.getElementById("debugdiv");
+	this.debuglabels = $(this.debugdiv).find("ul.messageLabels");
     this.debugpre = document.createElement("pre"); 
     this.debugdiv.appendChild(this.debugpre);
+	this.debugdate = document.createElement("div");
+	this.debugdate.classList.add("popupMessageTimestamp");
+	this.debugdiv.appendChild(this.debugdate);
+	this.debugpre.onclick = function(e) { e.stopPropagation(); }
     this.debugdiv.onclick = function(e) {
 		// if it's not fading out (or about to fade out), then click will hide div
 		if (that._debugFadeTimeout === undefined && that._debugFadeInterval === undefined) {
@@ -1263,28 +1278,64 @@ OpenJsCad.Processor.prototype = {
     this.enableItems();
   },
 
-  // show debug messages for debugging current jscad script
-  // in the future, this may change to a persistent log that is only cleared out when render is initiated.
-  // for now, just show one message at a time and clear existing text out once it's faded away.
+  /**
+   * show debug messages for debugging current jscad script
+   * in the future, this may change to a persistent log that is only cleared out when render is initiated.
+   * 
+   * for now, just show one message at a time and clear existing text out once it's faded away.
+   * 
+   * message:
+   *  - text: (string) message text
+   *  - stack: (string) stack trace text
+   *  - sticky: (bool, default=false) does message fade out after a delay?
+   *  - fadeTimeout: (milliseconds) how long do we delay until fading out message (if sticky==false)
+   */
   showDebugMessage: function (message) {
     var self = this;
+
+    if (message.sticky===undefined) message.sticky=false
+    if (message.fadeTimeout===undefined) message.fadeTimeout=5000
+
     clearTimeout(this._debugFadeTimeout);
     clearInterval(this._debugFadeInterval);
     this.debugpre.textContent = message.text + "\n\n" + message.stack;
     this.debugdiv.style.opacity = 1;
     this.debugdiv.style.display = "block";
-    this._debugFadeTimeout = setTimeout(function(){
-		var fadePercent = 0;
+	this.debugdate.textContent = self.__showDebugMessage_getTimeString();
+
+	$(this.debuglabels).find('li.sticky')[ message.sticky ? "show" : "hide"]()
+
+    if (message.sticky) {
+		this._debugFadeTimeout = undefined;
+		this._debugFadeInterval = undefined;
+	}
+	else {
+      this._debugFadeTimeout = setTimeout(function(){
+        var fadePercent = 0;
         self._debugFadeInterval = setInterval(function(){
-			self.debugdiv.style.opacity -= 0.25;
-            if (self.debugdiv.style.opacity == 0) {
-				clearInterval(self._debugFadeInterval);
-				self.debugpre.textContent = "";
-				self.debugdiv.display = "none";
-			}
-		}, 150);
-    }, 5000);
+          self.debugdiv.style.opacity -= 0.25;
+          if (self.debugdiv.style.opacity == 0) {
+            clearInterval(self._debugFadeInterval);
+            self.debugpre.textContent = "";
+            self.debugdate.textContent = "";
+            self.debugdiv.display = "none";
+          }
+        }, 150);
+      }, message.fadeTimeout);
+    }
+
   }, 
+  __showDebugMessage_days: [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ],
+  __showDebugMessage_getTimeString: function (d) {
+    if (! d) d = new Date
+    var out = [ this.__showDebugMessage_days[ d.getDay() ] ]
+    out.push(
+	  (d.getHours()==0 ? "12" : d.getHours() < 12 ? d.getHours() : d.getHours()-12) 
+	  + (new Date( d.getTime() - d.getTimezoneOffset()*60000 )).toJSON().replace(/^[0-9-]{10}T[0-9]{2}/, '').replace(/Z$/, '')
+	)
+	out.push(d.getHours() < 12 ? "AM" : "PM")
+    return out.join(" ")
+  },
  
   setDebugging: function(debugging) {
     this.debugging = debugging;
