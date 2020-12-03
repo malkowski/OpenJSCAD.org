@@ -2,6 +2,16 @@ function t () {};
 
 t.fn=32;
 
+// stuff that IMO should be in global Math object
+t.Math = {}
+t.Math.avg = function () {
+	var sum = 0
+	for (var i=0; i<arguments.length; i++) {
+		sum += arguments[i]
+	}
+	return sum/arguments.length
+}
+
 // convert PostScript points to mm
 t.point2mm = function (pointValue) {
 	return pointValue * 0.352778;
@@ -89,9 +99,9 @@ t.getBounds = function (shape) {
 /**
  * center shape along x/y axis, place bottom at z=0
  */
-t.centerShape = function (shape) {
+t.centerShape = function (shape,centerZ) {
     var bounds = t.getBounds(shape)
-    return shape.translate([ -bounds.c.x, -bounds.c.y, -bounds.b[0].z ])
+    return shape.translate([ -bounds.c.x, -bounds.c.y, centerZ ? -bounds.c.z : -bounds.b[0].z ])
 }
 
 /**
@@ -739,7 +749,7 @@ t.screwThread = function (params) {
 */
 
 t.screwthread = function (params) {
-	throw new Error("t.screwthread is deprecated, use t.screwThread instead");
+	if (t.screwThread) throw new Error("t.screwthread is deprecated, use t.screwThread instead");
 	var defaultParams = {
 		innerD:     1,
 		outerD:    20,
@@ -797,7 +807,7 @@ t.screwthread = function (params) {
 	// d = [35.25, -0.01834, -1.25] // outside bottom
 
 	var steps = [ [a,b,c,d] ];
-	for (var r = 1; r < increments; r++) {
+	for (var r = 1; r <= increments; r++) {
 		var nextStep = steps[steps.length-1].map(function(p){ return p.slice(0) });
 		steps.push(nextStep);
 		for (var i = 0; i < nextStep.length; i++) {
