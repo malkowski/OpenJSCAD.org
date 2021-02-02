@@ -613,11 +613,10 @@ OpenJsCad.runMainInWorker = function(mainParameters) {
     self.postMessage({cmd: 'rendered', result: result_compact});
   }
   catch(e) {
-    var errtxt = e.toString();
-    if(e.stack) {
-      errtxt += '\nStack trace:\n'+e.stack;
-    } 
-    self.postMessage({cmd: 'error', err: errtxt});
+    self.postMessage({
+      cmd: 'error',
+      err: OpenJsCad.Processor.formatExceptionText(e),
+    });
   }
 };
 
@@ -687,6 +686,7 @@ OpenJsCad.parseJsCadScriptSync = function(script, mainParameters, debugging) {
 // callback: should be function(error, csg)
 OpenJsCad.parseJsCadScriptASync = function(script, mainParameters, options, callback) {
   var baselibraries = [
+    "lib/console.js",
     "csg.js",
     "openjscad.js",
     "openscad.js",
@@ -1006,6 +1006,30 @@ OpenJsCad.Processor.convertToSolid = function(obj) {
   }
   return obj;
 };
+
+// catch(e) => formatExceptionText => nice useful string with corrected line numbers, etc
+OpenJsCad.Processor.formatExceptionText = function (e) {
+	let textString = e.toString()
+	if(e.stack) {
+		let stackLines = e.stack.toString().split(/\n/)
+		if (textString == stackLines[0]) {
+			textString = ''
+		}
+		else {
+			textString += '\nStack trace:\n'
+		}
+		textString += stackLines.map(function(line){
+			if (line.match(/^\s*at main \(blob:.*:[0-9]+:[0-9]+\)\s*$/)) {
+				// "    at main (blob:...:34:7)" => [ "    at main", "34", "7" ]
+				let lineSegments = line.replace(/ \(blob:https?:\/\/.*:([0-9]+:[0-9]+)\)\s*$/, ':$1').split(/:/)
+				return lineSegments[0] + " (blob:" + (parseInt(lineSegments[1]) - 5) + ":" + lineSegments[2] + ")"
+			}
+			return line
+		}).join("\n")
+
+	}
+	return textString
+}
 
 OpenJsCad.Processor.prototype = {
   createElements: function() {
@@ -1480,10 +1504,7 @@ OpenJsCad.Processor.prototype = {
       catch(e)
       {
         that.processing = false;
-        var errtxt = e.toString();
-        if(e.stack) {
-          errtxt += '\nStack trace:\n'+e.stack;
-        } 
+        var errtxt = OpenJsCad.Processor.formatExceptionText(e);
         that.statusspan.innerHTML = "Error.";
       }
       that.enableItems();
